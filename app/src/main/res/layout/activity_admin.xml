@@ -1,216 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_dark_music"
-    android:fillViewport="true">
+    android:background="@drawable/bg_dark_music">
 
-    <LinearLayout
+    <RelativeLayout
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp"
+        android:background="#4D000000">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Quản Lý Bài Hát"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardSearchAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_below="@id/layoutHeader"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="#1AFFFFFF"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_glass_panel"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp">
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
 
-            <RelativeLayout
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="#94A3B8" />
+
+            <EditText
+                android:id="@+id/edtAdminSearch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="28dp">
-
-                <ImageView
-                    android:id="@+id/btnBack"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_centerVertical="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@android:drawable/ic_menu_revert"
-                    app:tint="#FFFFFF" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:text="Trang Quản Trị Viên"
-                    android:textColor="#FFFFFF"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-            </RelativeLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="ID bài hát"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:background="@android:color/transparent"
+                android:hint="Tìm theo tên bài hát, ca sĩ..."
+                android:textColor="#FFFFFF"
                 android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_menu_sort_by_size"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtSongId"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="number" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="Tên bài hát"
-                android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_media_play"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtSongTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="Tên ca sĩ"
-                android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_menu_myplaces"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtArtistName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="Tên file nhạc"
-                android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_menu_save"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtSongPath"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:hint="Tên file ảnh (vd: nen, nguyen)"
-                android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_menu_gallery"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtSongImage"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="28dp"
-                android:hint="Lời bài hát"
-                android:textColorHint="#94A3B8"
-                app:boxStrokeColor="#00E5FF"
-                app:hintTextColor="#00E5FF"
-                app:startIconDrawable="@android:drawable/ic_menu_sort_alphabetically"
-                app:startIconTint="#94A3B8">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtLyrics"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:minLines="3"
-                    android:textColor="#FFFFFF" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="3">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAddSong"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginEnd="6dp"
-                    android:layout_weight="1"
-                    android:text="THÊM"
-                    android:textColor="#064E3B"
-                    android:textStyle="bold"
-                    app:backgroundTint="#6EE7B7"
-                    app:cornerRadius="16dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnUpdateSong"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginHorizontal="6dp"
-                    android:layout_weight="1"
-                    android:text="SỬA"
-                    android:textColor="#78350F"
-                    android:textStyle="bold"
-                    app:backgroundTint="#FCD34D"
-                    app:cornerRadius="16dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDeleteSong"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:text="XÓA"
-                    android:textColor="#7F1D1D"
-                    android:textStyle="bold"
-                    app:backgroundTint="#FCA5A5"
-                    app:cornerRadius="16dp" />
-            </LinearLayout>
-
+                android:textSize="14sp"
+                android:inputType="text" />
         </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAdminSongs"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/cardSearchAdmin"
+        android:layout_marginTop="8dp"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddSong"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_input_add"
+        app:tint="#0F172A"
+        app:backgroundTint="#00E5FF"
+        android:contentDescription="Thêm bài hát" />
+
+</RelativeLayout>

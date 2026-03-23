@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#0F172A"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thông Tin Bài Hát"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="24dp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Tên bài hát"
+            android:textColorHint="#94A3B8"
+            app:boxStrokeColor="#00E5FF"
+            app:hintTextColor="#00E5FF"
+            app:startIconDrawable="@android:drawable/ic_media_play"
+            app:startIconTint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDialogTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Tên ca sĩ"
+            android:textColorHint="#94A3B8"
+            app:boxStrokeColor="#00E5FF"
+            app:hintTextColor="#00E5FF"
+            app:startIconDrawable="@android:drawable/ic_menu_myplaces"
+            app:startIconTint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDialogArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Tên file nhạc (VD: nhac_1)"
+            android:textColorHint="#94A3B8"
+            app:boxStrokeColor="#00E5FF"
+            app:hintTextColor="#00E5FF"
+            app:startIconDrawable="@android:drawable/ic_menu_save"
+            app:startIconTint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDialogPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Tên file ảnh (VD: nen1)"
+            android:textColorHint="#94A3B8"
+            app:boxStrokeColor="#00E5FF"
+            app:hintTextColor="#00E5FF"
+            app:startIconDrawable="@android:drawable/ic_menu_gallery"
+            app:startIconTint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDialogImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:hint="Lời bài hát"
+            android:textColorHint="#94A3B8"
+            app:boxStrokeColor="#00E5FF"
+            app:hintTextColor="#00E5FF"
+            app:startIconDrawable="@android:drawable/ic_menu_sort_alphabetically"
+            app:startIconTint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDialogLyrics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:minLines="4"
+                android:textColor="#FFFFFF" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+</ScrollView>
