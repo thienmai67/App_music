@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:text="Chào mừng"
-        android:textColor="#212121"
+        android:textColor="?attr/colorOnBackground"
         android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -41,7 +41,7 @@
         app:layout_constraintBottom_toBottomOf="@id/cardAvatar"
         app:layout_constraintEnd_toStartOf="@id/cardAvatar"
         app:layout_constraintTop_toTopOf="@id/cardAvatar"
-        app:tint="#212121" />
+        app:tint="?attr/colorOnBackground" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardAvatar"
@@ -94,7 +94,7 @@
                 android:background="@android:color/transparent"
                 android:hint="Tìm kiếm bài hát, ca sĩ..."
                 android:inputType="text"
-                android:textColor="#212121"
+                android:textColor="?attr/colorOnBackground"
                 android:textColorHint="#9E9E9E"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -107,7 +107,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
         android:text="Tuyển tập nổi bật"
-        android:textColor="#212121"
+        android:textColor="?attr/colorOnBackground"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -157,6 +157,7 @@
             android:gravity="center"
             android:orientation="horizontal">
 
+
             <ImageView
                 android:id="@+id/navHome"
                 android:layout_width="0dp"
@@ -165,7 +166,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Trang chủ"
                 android:src="@android:drawable/ic_menu_slideshow"
-                app:tint="#FFFFFF" />
+                app:tint="#AEEA00" />
 
             <ImageView
                 android:id="@+id/navDownload"
@@ -175,17 +176,30 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Nhạc đã tải"
                 android:src="@android:drawable/stat_sys_download"
-                app:tint="#80FFFFFF" />
+                app:tint="#AEEA00" />
 
+            <ImageView
+                android:id="@+id/navSettingsTop"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Cài đặt"
+                android:padding="12dp"
+                android:src="@android:drawable/stat_notify_sync"
+                app:layout_constraintBottom_toBottomOf="@id/cardAvatar"
+                app:layout_constraintEnd_toStartOf="@id/navAdminTop"
+                app:layout_constraintTop_toTopOf="@id/cardAvatar"
+                app:tint="#AEEA00" />
             <ImageView
                 android:id="@+id/navPlay"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="38dp"
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Phát nhạc"
                 android:src="@android:drawable/ic_media_play"
-                app:tint="#00E5FF" />
+                app:tint="#AEEA00" />
 
             <ImageView
                 android:id="@+id/navLogout"
@@ -195,7 +209,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Cá nhân"
                 android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#80FFFFFF" />
+                app:tint="#AEEA00" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

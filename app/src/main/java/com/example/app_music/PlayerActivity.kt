@@ -156,6 +156,8 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         btnDownload.setOnClickListener {
+            // Sử dụng thư mục riêng của ứng dụng (App-specific storage)
+
             if (!isLoggedIn) {
                 Toast.makeText(this, "Vui lòng đăng nhập để tải nhạc!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -174,7 +176,7 @@ class PlayerActivity : AppCompatActivity() {
 
             try {
                 // TẠO THƯ MỤC LƯU CHUNG
-                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
                 val musicDir = File(downloadsDir, "AppMusic")
                 if (!musicDir.exists()) {
                     musicDir.mkdirs()
@@ -194,7 +196,7 @@ class PlayerActivity : AppCompatActivity() {
                 // 2. TẢI ĐỒNG THỜI FILE ẢNH BÌA (.jpg)
                 downloadArtwork(songImage, baseFileName, musicDir)
 
-                Toast.makeText(this, "Đã tải xong nhạc và ảnh bìa!", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Đã tải xong nhạc!", Toast.LENGTH_LONG).show()
             } catch (e: Exception) {
                 Toast.makeText(this, "Lỗi tải xuống: ${e.message}", Toast.LENGTH_LONG).show()
             }

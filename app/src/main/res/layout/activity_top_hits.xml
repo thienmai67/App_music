@@ -16,7 +16,7 @@
         android:src="@android:drawable/ic_menu_revert"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="#212121" />
+        app:tint="?attr/colorOnBackground" />
 
     <TextView
         android:id="@+id/tvTitle"
@@ -25,7 +25,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="16dp"
         android:text="Top Thịnh Hành"
-        android:textColor="#212121"
+        android:textColor="?attr/colorOnBackground"
         android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,7 +38,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="4dp"
         android:text="Những bài hát được yêu thích nhất"
-        android:textColor="#757575"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />

@@ -62,7 +62,7 @@ class DownloadActivity : AppCompatActivity() {
 
     private fun loadFiles() {
         // ĐÃ SỬA: Chỉ trỏ vào thư mục "AppMusic" nằm trong Downloads thay vì toàn bộ thư mục Downloads
-        val downloadsFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "AppMusic")
+        val downloadsFolder = File(getExternalFilesDir(Environment.DIRECTORY_MUSIC), "AppMusic")
 
         if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
             // Lọc các file .mp3

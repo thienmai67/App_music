@@ -14,7 +14,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="12dp"
         android:src="@android:drawable/ic_menu_revert"
-        app:tint="#212121" />
+        app:tint="?attr/colorOnBackground" />
 
     <TextView
         android:id="@+id/tvTitle"
@@ -24,7 +24,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:text="Nhạc Đã Tải"
-        android:textColor="#212121"
+        android:textColor="?attr/colorOnBackground"
         android:textSize="32sp"
         android:textStyle="bold" />
 

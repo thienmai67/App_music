@@ -106,7 +106,9 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
     fun getTopLikedSongs(): ArrayList<Song> {
         val songList = ArrayList<Song>()
         val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM Songs ORDER BY likes DESC LIMIT 10", null)
+
+        // ĐÃ SỬA: Lọc bài hát có >= 2 lượt thích, sắp xếp giảm dần và lấy tối đa 5 bài
+        val cursor = db.rawQuery("SELECT * FROM Songs WHERE likes >= 2 ORDER BY likes DESC LIMIT 5", null)
 
         if (cursor.moveToFirst()) {
             do {
@@ -133,6 +135,7 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
         val result = db.update("Songs", values, "id=?", arrayOf(songId.toString()))
         return result > 0
     }
+
     // Hàm kiểm tra xem Username đã tồn tại chưa (tránh trùng lặp)
     fun checkUsername(username: String): Boolean {
         val db = this.readableDatabase

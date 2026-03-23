@@ -80,18 +80,23 @@ class DownloadAdapter(private val fileList: ArrayList<File>) : RecyclerView.Adap
                 .setPositiveButton("Xóa") { _, _ ->
                     val currentPos = holder.adapterPosition
                     if (currentPos != RecyclerView.NO_POSITION) {
-                        // 1. Xóa file MP3 trong máy
-                        if (file.exists()) file.delete()
 
-                        // 2. Xóa file ẢNH JPG đi kèm trong máy (nếu có)
-                        if (imageFile.exists()) imageFile.delete()
+                        // 1. Thực hiện xóa file MP3 và KIỂM TRA KẾT QUẢ
+                        val isDeleted = !file.exists() || file.delete()
 
-                        // 3. Xóa khỏi danh sách hiển thị và cập nhật lại giao diện
-                        fileList.removeAt(currentPos)
-                        notifyItemRemoved(currentPos)
-                        notifyItemRangeChanged(currentPos, fileList.size)
+                        if (isDeleted) {
+                            // 2. Xóa file ẢNH JPG đi kèm trong máy (nếu có)
+                            if (imageFile.exists()) imageFile.delete()
 
-                        Toast.makeText(context, "Đã xóa bài hát thành công!", Toast.LENGTH_SHORT).show()
+                            // 3. Xóa khỏi danh sách hiển thị và cập nhật lại giao diện
+                            fileList.removeAt(currentPos)
+                            notifyItemRemoved(currentPos)
+                            notifyItemRangeChanged(currentPos, fileList.size)
+
+                            Toast.makeText(context, "Đã xóa bài hát thành công!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Không thể xóa! Hệ điều hành từ chối quyền.", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
                 .setNegativeButton("Hủy", null)
