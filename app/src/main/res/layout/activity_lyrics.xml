@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#212121"
+    android:padding="24dp"> <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Lời Bài Hát"
+    android:textSize="24sp"
+    android:textStyle="bold"
+    android:textColor="#FFD54F"
+    android:gravity="center"
+    android:layout_marginBottom="24dp"/> <ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
+
+    <TextView
+        android:id="@+id/tvFullLyrics"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:lineSpacingExtra="10dp"/> </ScrollView>
+
+    <Button
+        android:id="@+id/btnCloseLyrics"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:text="ĐÓNG"
+        android:backgroundTint="#FFD54F"
+        android:textColor="#212121"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
