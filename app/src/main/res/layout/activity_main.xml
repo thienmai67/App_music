@@ -29,6 +29,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvGreeting" />
 
+    <ImageView
+        android:id="@+id/navAdminTop"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Quản lý"
+        android:padding="10dp"
+        android:src="@android:drawable/ic_menu_manage"
+        app:layout_constraintBottom_toBottomOf="@id/cardAvatar"
+        app:layout_constraintEnd_toStartOf="@id/cardAvatar"
+        app:layout_constraintTop_toTopOf="@id/cardAvatar"
+        app:tint="#212121" />
+
     <androidx.cardview.widget.CardView
         android:id="@+id/cardAvatar"
         android:layout_width="48dp"
@@ -154,13 +168,13 @@
                 app:tint="#FFFFFF" />
 
             <ImageView
-                android:id="@+id/navAdd"
+                android:id="@+id/navDownload"
                 android:layout_width="0dp"
                 android:layout_height="28dp"
                 android:layout_weight="1"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Quản lý"
-                android:src="@android:drawable/ic_menu_manage"
+                android:contentDescription="Nhạc đã tải"
+                android:src="@android:drawable/stat_sys_download"
                 app:tint="#80FFFFFF" />
 
             <ImageView

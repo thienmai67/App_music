@@ -32,11 +32,10 @@ class MainActivity : AppCompatActivity() {
         val edtSearch = findViewById<EditText>(R.id.edtSearch)
 
         val navHome = findViewById<ImageView>(R.id.navHome)
-        val navAdd = findViewById<ImageView>(R.id.navAdd)
+        val navDownload = findViewById<ImageView>(R.id.navDownload) // Ánh xạ nút Download mới
+        val navAdminTop = findViewById<ImageView>(R.id.navAdminTop) // Ánh xạ nút Admin ở góc trên
         val navPlay = findViewById<ImageView>(R.id.navPlay)
         val navLogout = findViewById<ImageView>(R.id.navLogout)
-
-        // --- CHÈN THÊM: Ánh xạ nút Xem tất cả ---
         val tvSeeAll = findViewById<TextView>(R.id.tvSeeAll)
 
         edtSearch.background.alpha = 255
@@ -63,11 +62,12 @@ class MainActivity : AppCompatActivity() {
 
         // CÀI ĐẶT HIỆU ỨNG NHÚN KHI CHẠM CHO CÁC NÚT
         setupButtonAnimations(navHome)
-        setupButtonAnimations(navAdd)
+        setupButtonAnimations(navDownload)
+        setupButtonAnimations(navAdminTop)
         setupButtonAnimations(navPlay)
         setupButtonAnimations(navLogout)
 
-        // --- MỚI: SỰ KIỆN CLICK "XEM TẤT CẢ" ---
+        // SỰ KIỆN CLICK "XEM TẤT CẢ"
         tvSeeAll.setOnClickListener {
             val intent = Intent(this, ActivityTopHits::class.java)
             startActivity(intent)
@@ -78,7 +78,8 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Đang ở Trang chủ", Toast.LENGTH_SHORT).show()
         }
 
-        navAdd.setOnClickListener {
+        // Sự kiện click cho nút Admin (Góc trên phải)
+        navAdminTop.setOnClickListener {
             val sharedPref = getSharedPreferences("AppMusicPrefs", Context.MODE_PRIVATE)
             val role = sharedPref.getInt("role", -1)
 
@@ -87,6 +88,11 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Chỉ Quản trị viên mới được dùng chức năng này!", Toast.LENGTH_LONG).show()
             }
+        }
+
+        // Sự kiện click cho nút Download (Thanh menu dưới)
+        navDownload.setOnClickListener {
+            startActivity(Intent(this, DownloadActivity::class.java))
         }
 
         navPlay.setOnClickListener {
@@ -105,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- HÀM TẠO HIỆU ỨNG CO GIÃN (CLICK ANIMATION) ---
+    // HÀM TẠO HIỆU ỨNG CO GIÃN (CLICK ANIMATION)
     private fun setupButtonAnimations(view: View) {
         view.setOnTouchListener { v, event ->
             when (event.action) {

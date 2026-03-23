@@ -36,7 +36,6 @@ class DownloadActivity : AppCompatActivity() {
     }
 
     private fun checkPermissionsAndLoadFiles() {
-        // Tùy thuộc vào phiên bản Android để xin quyền phù hợp
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
@@ -62,7 +61,9 @@ class DownloadActivity : AppCompatActivity() {
     }
 
     private fun loadFiles() {
-        val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        // ĐÃ SỬA: Chỉ trỏ vào thư mục "AppMusic" nằm trong Downloads thay vì toàn bộ thư mục Downloads
+        val downloadsFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "AppMusic")
+
         if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
             // Lọc các file .mp3
             val files = downloadsFolder.listFiles { file ->
