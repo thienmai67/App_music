@@ -1,11 +1,11 @@
-package com.example.app_music // Đổi thành package của bạn
+package com.example.app_music
 
 data class Song(
-    val id: Int,
-    val title: String,
-    val artist: String,
-    val path: String,
-    val image: String,
-    val lyrics: String,
+    var id: String = "",
+    var title: String = "",
+    var artist: String = "",
+    var path: String = "",
+    var image: String = "",
+    var lyrics: String = "",
     var likes: Int = 0
 )

@@ -2,15 +2,18 @@ package com.example.app_music
 
 import android.animation.ObjectAnimator
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.os.*
 import android.view.animation.LinearInterpolator
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.google.firebase.database.FirebaseDatabase
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URL
+import kotlin.concurrent.thread
 
 class PlayerActivity : AppCompatActivity() {
     private lateinit var mediaPlayer: MediaPlayer
@@ -27,13 +30,12 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var tvLikeCount: TextView
     private lateinit var btnShare: ImageView
     private lateinit var btnDownload: ImageView
-    private lateinit var dbHelper: DBHelper
 
     private var isLoggedIn = false
     private var isLiked = false
     private val handler = Handler(Looper.getMainLooper())
 
-    private var songId = -1
+    private var songId = "" // ĐÃ SỬA: Đổi thành String để tương thích mây Firebase
     private var songTitle = ""
     private var songArtist = ""
     private var songPath = ""
@@ -43,6 +45,7 @@ class PlayerActivity : AppCompatActivity() {
     private var songLocalPath: String? = null
 
     private var albumAnimator: ObjectAnimator? = null
+    private var isPrepared = false // Cờ kiểm tra nhạc mây đã tải xong chưa
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +53,6 @@ class PlayerActivity : AppCompatActivity() {
 
         val sharedPref = getSharedPreferences("AppMusicPrefs", MODE_PRIVATE)
         isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-        dbHelper = DBHelper(this)
 
         initViews()
         loadSongData()
@@ -95,16 +97,15 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun loadSongData() {
-        songId = intent.getIntExtra("song_id", -1)
+        songId = intent.getStringExtra("song_id") ?: ""
         songTitle = intent.getStringExtra("SONG_TITLE") ?: "Tên bài hát"
         songArtist = intent.getStringExtra("SONG_ARTIST") ?: "Ca sĩ"
         songPath = intent.getStringExtra("SONG_PATH") ?: "test_song"
 
-        // Nhận đường dẫn nhạc và ảnh local (nếu phát từ thư mục Tải về)
         songLocalPath = intent.getStringExtra("SONG_LOCAL_PATH")
         val songLocalImage = intent.getStringExtra("SONG_LOCAL_IMAGE")
 
-        songImage = intent.getStringExtra("SONG_IMAGE") ?: "ic_menu_gallery"
+        songImage = intent.getStringExtra("SONG_IMAGE") ?: ""
         songLyrics = intent.getStringExtra("SONG_LYRICS") ?: "Chưa có lời bài hát"
         likeCount = intent.getIntExtra("song_likes", 0)
 
@@ -112,27 +113,24 @@ class PlayerActivity : AppCompatActivity() {
         tvArtistName.text = songArtist
         updateLikeUI()
 
-        // --- ƯU TIÊN HIỂN THỊ ẢNH LOCAL NẾU CÓ ---
+        // TẢI ẢNH: Ưu tiên ảnh Local -> Link Mạng (Glide) -> Ảnh Raw cũ
         if (!songLocalImage.isNullOrEmpty() && File(songLocalImage).exists()) {
             val bitmap = BitmapFactory.decodeFile(songLocalImage)
             imgAlbumArt.setImageBitmap(bitmap)
+        } else if (songImage.startsWith("http")) {
+            Glide.with(this).load(songImage).into(imgAlbumArt)
         } else {
             val imageResId = resources.getIdentifier(songImage, "drawable", packageName)
-            if (imageResId != 0) {
-                imgAlbumArt.setImageResource(imageResId)
-            } else {
-                imgAlbumArt.setImageResource(android.R.drawable.ic_menu_gallery)
-            }
+            if (imageResId != 0) imgAlbumArt.setImageResource(imageResId)
+            else imgAlbumArt.setImageResource(android.R.drawable.ic_menu_gallery)
         }
 
-        val resID = resources.getIdentifier(songPath, "raw", packageName)
-        val finalResID = if (resID != 0) resID else R.raw.test_song
-        setupPlayer(finalResID)
+        setupPlayer()
     }
 
     private fun setupActions() {
         btnLike.setOnClickListener {
-            if (songId == -1) {
+            if (songId.isEmpty()) {
                 Toast.makeText(this, "Lỗi không xác định bài hát!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -144,105 +142,110 @@ class PlayerActivity : AppCompatActivity() {
                 likeCount--
                 Toast.makeText(this, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show()
             }
-            dbHelper.updateLike(songId, likeCount)
+
+            // ĐÃ CẬP NHẬT: Ghi lượt thích thẳng lên Firebase Realtime Database
+            FirebaseDatabase.getInstance().getReference("Songs").child(songId).child("likes").setValue(likeCount)
             updateLikeUI()
         }
 
         btnShare.setOnClickListener {
             val shareIntent = Intent(Intent.ACTION_SEND)
             shareIntent.type = "text/plain"
-            shareIntent.putExtra(Intent.EXTRA_TEXT, "Đang nghe bài '$songTitle' của $songArtist trên App Music xịn xò. Nghe cùng mình nhé!")
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "Đang nghe bài '$songTitle' của $songArtist trên App Music Nhóm 4. Nghe cùng mình nhé!")
             startActivity(Intent.createChooser(shareIntent, "Chia sẻ bài hát qua..."))
         }
 
         btnDownload.setOnClickListener {
-            // Sử dụng thư mục riêng của ứng dụng (App-specific storage)
-
             if (!isLoggedIn) {
                 Toast.makeText(this, "Vui lòng đăng nhập để tải nhạc!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            if (!songLocalPath.isNullOrEmpty()) {
+            val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+            val musicDir = File(downloadsDir, "AppMusic")
+            val baseFileName = "$songTitle - $songArtist"
+            val mp3File = File(musicDir, "$baseFileName.mp3")
+
+            if (!songLocalPath.isNullOrEmpty() || mp3File.exists()) {
                 Toast.makeText(this, "Bài hát này đã có sẵn trong máy!", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val resID = resources.getIdentifier(songPath, "raw", packageName)
-            if (resID == 0) {
-                Toast.makeText(this, "Lỗi: Không tìm thấy file gốc (res/raw) để tải!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            Toast.makeText(this, "Đang tải bài hát xuống...", Toast.LENGTH_SHORT).show()
 
-            try {
-                // TẠO THƯ MỤC LƯU CHUNG
-                val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-                val musicDir = File(downloadsDir, "AppMusic")
-                if (!musicDir.exists()) {
-                    musicDir.mkdirs()
+            // Dùng luồng chạy ngầm để tải file từ Link mạng về máy
+            thread {
+                try {
+                    if (!musicDir.exists()) musicDir.mkdirs()
+
+                    if (songPath.startsWith("http")) {
+                        URL(songPath).openStream().use { input ->
+                            FileOutputStream(mp3File).use { output -> input.copyTo(output) }
+                        }
+                    } else {
+                        val resID = resources.getIdentifier(songPath, "raw", packageName)
+                        if (resID != 0) {
+                            resources.openRawResource(resID).use { input ->
+                                FileOutputStream(mp3File).use { output -> input.copyTo(output) }
+                            }
+                        }
+                    }
+
+                    // Tải kèm ảnh bìa nếu là link mạng
+                    if (songImage.startsWith("http")) {
+                        val imgFile = File(musicDir, "$baseFileName.jpg")
+                        URL(songImage).openStream().use { input ->
+                            FileOutputStream(imgFile).use { output -> input.copyTo(output) }
+                        }
+                    }
+
+                    runOnUiThread {
+                        Toast.makeText(this@PlayerActivity, "Tải xong: $songTitle", Toast.LENGTH_LONG).show()
+                    }
+                } catch (e: Exception) {
+                    runOnUiThread { Toast.makeText(this@PlayerActivity, "Lỗi tải xuống: ${e.message}", Toast.LENGTH_SHORT).show() }
                 }
-
-                // TÊN FILE CƠ BẢN (KHÔNG ĐUÔI)
-                val baseFileName = "$songTitle - $songArtist"
-
-                // 1. TẢI FILE NHẠC (.mp3)
-                val mp3InputStream = resources.openRawResource(resID)
-                val mp3File = File(musicDir, "$baseFileName.mp3")
-                val mp3OutputStream = FileOutputStream(mp3File)
-                mp3InputStream.copyTo(mp3OutputStream)
-                mp3InputStream.close()
-                mp3OutputStream.close()
-
-                // 2. TẢI ĐỒNG THỜI FILE ẢNH BÌA (.jpg)
-                downloadArtwork(songImage, baseFileName, musicDir)
-
-                Toast.makeText(this, "Đã tải xong nhạc!", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "Lỗi tải xuống: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    // HÀM TẢI VÀ LƯU ẢNH BÌA TỪ DRAWABLE SANG BỘ NHỚ
-    private fun downloadArtwork(imageName: String, baseFileName: String, targetDir: File) {
-        val imageResId = resources.getIdentifier(imageName, "drawable", packageName)
-        val finalImageResId = if (imageResId != 0) imageResId else android.R.drawable.ic_menu_gallery
-
+    private fun setupPlayer() {
         try {
-            val bitmap = BitmapFactory.decodeResource(resources, finalImageResId)
+            mediaPlayer = MediaPlayer()
 
-            if (bitmap != null) {
-                val imageFile = File(targetDir, "$baseFileName.jpg")
-                val outputStream = FileOutputStream(imageFile)
-
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-
-                outputStream.flush()
-                outputStream.close()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun setupPlayer(resID: Int) {
-        try {
             if (!songLocalPath.isNullOrEmpty() && File(songLocalPath!!).exists()) {
-                mediaPlayer = MediaPlayer()
+                // Nhạc tải về trong máy
                 mediaPlayer.setDataSource(songLocalPath)
                 mediaPlayer.prepare()
+                onPrepared()
+            } else if (songPath.startsWith("http")) {
+                // Nhạc trên mây (Streaming qua URL)
+                mediaPlayer.setDataSource(songPath)
+                mediaPlayer.prepareAsync() // Chạy ngầm để không đơ app khi mạng chậm
+                mediaPlayer.setOnPreparedListener {
+                    onPrepared()
+                }
             } else {
-                mediaPlayer = MediaPlayer.create(this, resID)
+                // Nhạc offline mặc định có sẵn (R.raw)
+                val resID = resources.getIdentifier(songPath, "raw", packageName)
+                if (resID != 0) {
+                    val afd = resources.openRawResourceFd(resID)
+                    mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    afd.close()
+                    mediaPlayer.prepare()
+                    onPrepared()
+                }
             }
-
-            seekBar.max = mediaPlayer.duration
-            tvTotalTime.text = createTimeLabel(mediaPlayer.duration)
         } catch (e: Exception) {
             Toast.makeText(this, "Lỗi khi tải file nhạc!", Toast.LENGTH_SHORT).show()
-            return
         }
 
         btnPlayPause.setOnClickListener {
+            if (!isPrepared) {
+                Toast.makeText(this, "Đang tải nhạc, vui lòng đợi...", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             if (mediaPlayer.isPlaying) {
                 mediaPlayer.pause()
                 btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
@@ -251,12 +254,8 @@ class PlayerActivity : AppCompatActivity() {
                 mediaPlayer.start()
                 btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
                 updateSeekBar()
-
-                if (albumAnimator?.isStarted == true) {
-                    albumAnimator?.resume()
-                } else {
-                    albumAnimator?.start()
-                }
+                if (albumAnimator?.isStarted == true) albumAnimator?.resume()
+                else albumAnimator?.start()
             }
         }
 
@@ -266,7 +265,7 @@ class PlayerActivity : AppCompatActivity() {
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) { handler.removeCallbacksAndMessages(null) }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                if (this@PlayerActivity::mediaPlayer.isInitialized) {
+                if (isPrepared) {
                     mediaPlayer.seekTo(seekBar!!.progress)
                     updateSeekBar()
                 }
@@ -274,10 +273,22 @@ class PlayerActivity : AppCompatActivity() {
         })
     }
 
+    private fun onPrepared() {
+        isPrepared = true
+        seekBar.max = mediaPlayer.duration
+        tvTotalTime.text = createTimeLabel(mediaPlayer.duration)
+        // Tự động phát khi tải xong
+        mediaPlayer.start()
+        btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+        updateSeekBar()
+        albumAnimator?.start()
+    }
+
     private fun updateSeekBar() {
-        if (mediaPlayer.isPlaying) {
+        if (isPrepared && mediaPlayer.isPlaying) {
             val currentPos = mediaPlayer.currentPosition
 
+            // Khách bị giới hạn 30 giây
             if (!isLoggedIn && currentPos >= 30000 && songLocalPath.isNullOrEmpty()) {
                 mediaPlayer.pause()
                 btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
@@ -309,7 +320,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (this::mediaPlayer.isInitialized && mediaPlayer.isPlaying) {
+        if (isPrepared && mediaPlayer.isPlaying) {
             mediaPlayer.pause()
             btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
             albumAnimator?.pause()
@@ -318,7 +329,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (this::mediaPlayer.isInitialized) {
+        if (isPrepared) {
             mediaPlayer.release()
             handler.removeCallbacksAndMessages(null)
             albumAnimator?.cancel()

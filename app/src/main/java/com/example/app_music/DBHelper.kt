@@ -9,7 +9,6 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
 
     override fun onCreate(db: SQLiteDatabase?) {
         val createTableUser = "CREATE TABLE Users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, role INTEGER)"
-        // ĐÃ THÊM CỘT image TEXT
         val createTableSong = "CREATE TABLE Songs (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, artist TEXT, path TEXT, image TEXT, lyrics TEXT, likes INTEGER DEFAULT 0)"
 
         db?.execSQL(createTableUser)
@@ -46,14 +45,13 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
         return role
     }
 
-    // ĐÃ THÊM: tham số image
     fun addSong(title: String, artist: String, path: String, image: String, lyrics: String): Long {
         val db = this.writableDatabase
         val values = ContentValues().apply {
             put("title", title)
             put("artist", artist)
             put("path", path)
-            put("image", image) // Lưu ảnh
+            put("image", image)
             put("lyrics", lyrics)
         }
         return db.insert("Songs", null, values)
@@ -71,25 +69,25 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
                 val title = cursor.getString(cursor.getColumnIndex("title"))
                 val artist = cursor.getString(cursor.getColumnIndex("artist"))
                 val path = cursor.getString(cursor.getColumnIndex("path"))
-                val image = cursor.getString(cursor.getColumnIndex("image")) // Đọc ảnh
+                val image = cursor.getString(cursor.getColumnIndex("image"))
                 val lyrics = cursor.getString(cursor.getColumnIndex("lyrics"))
                 val likes = cursor.getInt(cursor.getColumnIndex("likes"))
 
-                songList.add(Song(id, title, artist, path, image, lyrics, likes))
+                // ĐÃ SỬA: Thêm .toString() vào biến id
+                songList.add(Song(id.toString(), title, artist, path, image, lyrics, likes))
             } while (cursor.moveToNext())
         }
         cursor.close()
         return songList
     }
 
-    // ĐÃ THÊM: tham số image
     fun updateSong(id: String, title: String, artist: String, path: String, image: String, lyrics: String): Boolean {
         val db = this.writableDatabase
         val values = ContentValues().apply {
             put("title", title)
             put("artist", artist)
             put("path", path)
-            put("image", image) // Sửa ảnh
+            put("image", image)
             put("lyrics", lyrics)
         }
         val result = db.update("Songs", values, "id=?", arrayOf(id))
@@ -107,7 +105,6 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
         val songList = ArrayList<Song>()
         val db = this.readableDatabase
 
-        // ĐÃ SỬA: Lọc bài hát có >= 2 lượt thích, sắp xếp giảm dần và lấy tối đa 5 bài
         val cursor = db.rawQuery("SELECT * FROM Songs WHERE likes >= 2 ORDER BY likes DESC LIMIT 5", null)
 
         if (cursor.moveToFirst()) {
@@ -116,11 +113,12 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
                 val title = cursor.getString(cursor.getColumnIndex("title"))
                 val artist = cursor.getString(cursor.getColumnIndex("artist"))
                 val path = cursor.getString(cursor.getColumnIndex("path"))
-                val image = cursor.getString(cursor.getColumnIndex("image")) // Đọc ảnh
+                val image = cursor.getString(cursor.getColumnIndex("image"))
                 val lyrics = cursor.getString(cursor.getColumnIndex("lyrics"))
                 val likes = cursor.getInt(cursor.getColumnIndex("likes"))
 
-                songList.add(Song(id, title, artist, path, image, lyrics, likes))
+                // ĐÃ SỬA: Thêm .toString() vào biến id
+                songList.add(Song(id.toString(), title, artist, path, image, lyrics, likes))
             } while (cursor.moveToNext())
         }
         cursor.close()
@@ -136,12 +134,11 @@ class DBHelper(context: Context) : SQLiteOpenHelper(context, "AppMusicDB", null,
         return result > 0
     }
 
-    // Hàm kiểm tra xem Username đã tồn tại chưa (tránh trùng lặp)
     fun checkUsername(username: String): Boolean {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM Users WHERE username=?", arrayOf(username))
         val count = cursor.count
         cursor.close()
-        return count > 0 // Trả về true nếu đã có người dùng tên này
+        return count > 0
     }
 }

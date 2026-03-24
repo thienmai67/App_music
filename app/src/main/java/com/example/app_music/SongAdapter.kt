@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
 class SongAdapter(private var songList: ArrayList<Song>) : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
 
@@ -28,13 +29,12 @@ class SongAdapter(private var songList: ArrayList<Song>) : RecyclerView.Adapter<
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
 
-        // ĐÃ SỬA: Tìm ảnh theo song.image
-        val imageResId = context.resources.getIdentifier(song.image, "drawable", context.packageName)
-        if (imageResId != 0) {
-            holder.imgItemThumb.setImageResource(imageResId)
-        } else {
-            holder.imgItemThumb.setImageResource(android.R.drawable.ic_menu_gallery)
-        }
+        // Dùng Glide để tải ảnh từ Link URL trên mạng
+        Glide.with(context)
+            .load(song.image)
+            .placeholder(android.R.drawable.ic_menu_gallery) // Ảnh chờ khi đang tải
+            .error(android.R.drawable.ic_menu_gallery)       // Ảnh khi link bị lỗi
+            .into(holder.imgItemThumb)
 
         holder.itemView.setOnClickListener {
             val intent = Intent(context, PlayerActivity::class.java)
@@ -42,8 +42,8 @@ class SongAdapter(private var songList: ArrayList<Song>) : RecyclerView.Adapter<
             intent.putExtra("SONG_ARTIST", song.artist)
             intent.putExtra("SONG_LYRICS", song.lyrics)
             intent.putExtra("SONG_PATH", song.path)
-            intent.putExtra("SONG_IMAGE", song.image) // ĐÃ THÊM
-            intent.putExtra("song_id", song.id)
+            intent.putExtra("SONG_IMAGE", song.image)
+            intent.putExtra("song_id", song.id) // Bây giờ ID là String thay vì Int
             intent.putExtra("song_likes", song.likes)
             context.startActivity(intent)
         }

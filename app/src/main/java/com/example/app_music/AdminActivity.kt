@@ -12,35 +12,40 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class AdminActivity : AppCompatActivity() {
 
-    private lateinit var dbHelper: DBHelper
     private lateinit var rvAdminSongs: RecyclerView
     private lateinit var adapter: AdminSongAdapter
-    private var songList = ArrayList<Song>() // Danh sách gốc chứa toàn bộ bài hát
+    private var songList = ArrayList<Song>()
+    private var fullSongList = ArrayList<Song>() // Giữ danh sách gốc để search
+    private lateinit var database: DatabaseReference // Khai báo Firebase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin)
 
-        dbHelper = DBHelper(this)
+        // Khởi tạo kết nối đến node "Songs" trong Realtime Database
+        database = FirebaseDatabase.getInstance().getReference("Songs")
 
         rvAdminSongs = findViewById(R.id.rvAdminSongs)
         rvAdminSongs.layoutManager = LinearLayoutManager(this)
 
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val fabAddSong = findViewById<FloatingActionButton>(R.id.fabAddSong)
-        val edtAdminSearch = findViewById<EditText>(R.id.edtAdminSearch) // Ánh xạ thanh tìm kiếm
+        val edtAdminSearch = findViewById<EditText>(R.id.edtAdminSearch)
 
         btnBack.setOnClickListener { finish() }
 
-        // Mở dialog trắng để Thêm mới
         fabAddSong.setOnClickListener {
             showSongDialog(null)
         }
 
-        // Bắt sự kiện khi gõ vào thanh tìm kiếm
         edtAdminSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -50,34 +55,42 @@ class AdminActivity : AppCompatActivity() {
         })
 
         setupRecyclerView()
+        fetchSongsFromFirebase() // Tự động lấy dữ liệu từ Firebase
     }
 
     private fun setupRecyclerView() {
-        songList = dbHelper.getAllSongs()
         adapter = AdminSongAdapter(songList,
-            onEditClick = { song ->
-                // Mở dialog và truyền dữ liệu bài hát cũ vào để Sửa
-                showSongDialog(song)
-            },
-            onDeleteClick = { song ->
-                confirmDeleteSong(song)
-            }
+            onEditClick = { song -> showSongDialog(song) },
+            onDeleteClick = { song -> confirmDeleteSong(song) }
         )
         rvAdminSongs.adapter = adapter
     }
 
-    private fun refreshList() {
-        songList = dbHelper.getAllSongs()
-        // Clear ô search khi có thay đổi dữ liệu (tùy chọn)
-        findViewById<EditText>(R.id.edtAdminSearch).text.clear()
-        adapter.updateData(songList)
+    private fun fetchSongsFromFirebase() {
+        // Lắng nghe dữ liệu thay đổi trên Firebase (tự động cập nhật realtime)
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                songList.clear()
+                fullSongList.clear()
+                for (songSnapshot in snapshot.children) {
+                    val song = songSnapshot.getValue(Song::class.java)
+                    if (song != null) {
+                        songList.add(song)
+                        fullSongList.add(song)
+                    }
+                }
+                adapter.updateData(songList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@AdminActivity, "Lỗi tải dữ liệu: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
-    // Hàm lọc danh sách bài hát
     private fun filterSongs(text: String) {
         val filteredList = ArrayList<Song>()
-        for (song in songList) {
-            // Tìm kiếm không phân biệt hoa thường theo Tên bài hát hoặc Tên ca sĩ
+        for (song in fullSongList) {
             if (song.title.lowercase().contains(text.lowercase()) ||
                 song.artist.lowercase().contains(text.lowercase())
             ) {
@@ -87,7 +100,6 @@ class AdminActivity : AppCompatActivity() {
         adapter.updateData(filteredList)
     }
 
-    // Hàm hiển thị Dialog dùng chung cho cả Thêm và Sửa
     private fun showSongDialog(song: Song?) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_song_form, null)
 
@@ -97,9 +109,12 @@ class AdminActivity : AppCompatActivity() {
         val edtImage = dialogView.findViewById<EditText>(R.id.edtDialogImage)
         val edtLyrics = dialogView.findViewById<EditText>(R.id.edtDialogLyrics)
 
+        // Đổi hint để Admin biết chỗ dán link
+        edtPath.hint = "Dán link bài hát (VD: link đuôi .mp3)"
+        edtImage.hint = "Dán link ảnh bìa (VD: link Google, Imgur...)"
+
         val isEditMode = (song != null)
 
-        // Nếu là chế độ sửa, điền sẵn dữ liệu cũ vào các ô
         if (isEditMode) {
             edtTitle.setText(song!!.title)
             edtArtist.setText(song.artist)
@@ -108,7 +123,7 @@ class AdminActivity : AppCompatActivity() {
             edtLyrics.setText(song.lyrics)
         }
 
-        val dialogTitle = if (isEditMode) "Sửa Bài Hát #${song?.id}" else "Thêm Bài Hát Mới"
+        val dialogTitle = if (isEditMode) "Sửa Bài Hát" else "Thêm Bài Hát Mới"
 
         AlertDialog.Builder(this)
             .setTitle(dialogTitle)
@@ -121,27 +136,31 @@ class AdminActivity : AppCompatActivity() {
                 val lyrics = edtLyrics.text.toString().trim()
 
                 if (title.isEmpty() || artist.isEmpty() || path.isEmpty()) {
-                    Toast.makeText(this, "Tên, Ca sĩ và File nhạc không được để trống!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Tên, Ca sĩ và Link nhạc không được để trống!", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
                 if (isEditMode) {
-                    // Cập nhật
-                    val success = dbHelper.updateSong(song!!.id.toString(), title, artist, path, image, lyrics)
-                    if (success) {
-                        Toast.makeText(this, "Đã cập nhật bài hát!", Toast.LENGTH_SHORT).show()
-                        refreshList()
-                    } else {
-                        Toast.makeText(this, "Lỗi cập nhật!", Toast.LENGTH_SHORT).show()
+                    // Cập nhật lên Firebase
+                    val updateData = mapOf(
+                        "title" to title,
+                        "artist" to artist,
+                        "path" to path,
+                        "image" to image,
+                        "lyrics" to lyrics
+                    )
+                    database.child(song!!.id).updateChildren(updateData).addOnCompleteListener { task ->
+                        if (task.isSuccessful) Toast.makeText(this, "Đã cập nhật bài hát!", Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this, "Lỗi cập nhật!", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    // Thêm mới
-                    val result = dbHelper.addSong(title, artist, path, image, lyrics)
-                    if (result != -1L) {
-                        Toast.makeText(this, "Đã thêm bài hát mới!", Toast.LENGTH_SHORT).show()
-                        refreshList()
-                    } else {
-                        Toast.makeText(this, "Lỗi khi thêm bài hát!", Toast.LENGTH_SHORT).show()
+                    // Thêm mới lên Firebase
+                    val newId = database.push().key ?: return@setPositiveButton
+                    val newSong = Song(newId, title, artist, path, image, lyrics, 0)
+
+                    database.child(newId).setValue(newSong).addOnCompleteListener { task ->
+                        if (task.isSuccessful) Toast.makeText(this, "Đã thêm lên mây!", Toast.LENGTH_SHORT).show()
+                        else Toast.makeText(this, "Lỗi khi thêm!", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -153,13 +172,11 @@ class AdminActivity : AppCompatActivity() {
     private fun confirmDeleteSong(song: Song) {
         AlertDialog.Builder(this)
             .setTitle("Xác nhận xóa")
-            .setMessage("Bạn có chắc chắn muốn xóa bài hát '${song.title}' không?")
+            .setMessage("Bạn có chắc chắn muốn xóa bài '${song.title}' khỏi hệ thống không?")
             .setPositiveButton("Xóa") { _, _ ->
-                if (dbHelper.deleteSong(song.id.toString())) {
-                    Toast.makeText(this, "Đã xóa bài hát", Toast.LENGTH_SHORT).show()
-                    refreshList()
-                } else {
-                    Toast.makeText(this, "Lỗi khi xóa!", Toast.LENGTH_SHORT).show()
+                database.child(song.id).removeValue().addOnCompleteListener { task ->
+                    if (task.isSuccessful) Toast.makeText(this, "Đã xóa bài hát!", Toast.LENGTH_SHORT).show()
+                    else Toast.makeText(this, "Lỗi khi xóa!", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Hủy", null)

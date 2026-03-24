@@ -8,15 +8,18 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var dbHelper: DBHelper
+    // 1. Khai báo biến Firebase Auth thay cho DBHelper
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        // Kiểm tra xem đã đăng nhập từ trước chưa
         val sharedPref = getSharedPreferences("AppMusicPrefs", Context.MODE_PRIVATE)
         val checkIsLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
 
@@ -26,7 +29,8 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        dbHelper = DBHelper(this)
+        // 2. Khởi tạo Firebase Auth
+        auth = FirebaseAuth.getInstance()
 
         val edtUsername = findViewById<EditText>(R.id.edtUsername)
         val edtPassword = findViewById<EditText>(R.id.edtPassword)
@@ -43,27 +47,29 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val role = dbHelper.checkUser(user, pass)
+            // Mẹo biến Username thành Email (giống bên Đăng ký)
+            val email = if (user.contains("@")) user else "$user@appmusic.com"
 
-            when (role) {
-                1 -> {
-                    // ĐÃ SỬA: Lưu trạng thái là Admin (role = 1) và cho vào MainActivity
-                    saveLoginState(true, 1)
-                    Toast.makeText(this, "Xin chào Quản trị viên!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
+            // 3. Đăng nhập bằng Firebase
+            auth.signInWithEmailAndPassword(email, pass)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Xử lý phân quyền (Tài khoản tên 'admin' thì làm quản trị viên)
+                        if (user == "admin" || email == "admin@appmusic.com") {
+                            saveLoginState(true, 1)
+                            Toast.makeText(this, "Xin chào Quản trị viên!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            saveLoginState(true, 0)
+                            Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
+                        }
+
+                        // Chuyển sang màn hình chính
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
+                    }
                 }
-                0 -> {
-                    // ĐÃ SỬA: Lưu trạng thái là User thường (role = 0)
-                    saveLoginState(true, 0)
-                    Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                }
-                else -> {
-                    Toast.makeText(this, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
-                }
-            }
         }
 
         tvGoToRegister.setOnClickListener {
@@ -79,12 +85,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // ĐÃ SỬA: Hàm này giờ lưu thêm quyền (role)
+    // Hàm lưu trạng thái đăng nhập
     private fun saveLoginState(isLoggedIn: Boolean, role: Int) {
         val sharedPref = getSharedPreferences("AppMusicPrefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putBoolean("isLoggedIn", isLoggedIn)
-            putInt("role", role) // Lưu thêm biến role vào bộ nhớ
+            putInt("role", role)
             apply()
         }
     }

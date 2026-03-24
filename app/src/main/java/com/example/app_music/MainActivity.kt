@@ -15,18 +15,25 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var dbHelper: DBHelper
     private lateinit var recyclerView: RecyclerView
     private lateinit var songAdapter: SongAdapter
     private var songList = ArrayList<Song>()
+    private var fullSongList = ArrayList<Song>()
+
+    // Khai báo Firebase thay cho DBHelper
+    private lateinit var database: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. KIỂM TRA MÀU NỀN TRƯỚC KHI KHỞI TẠO (Chống vòng lặp và chớp đen)
         val sharedPref = getSharedPreferences("AppMusicPrefs", Context.MODE_PRIVATE)
         val isDarkMode = sharedPref.getBoolean("isDarkMode", false)
         val currentMode = AppCompatDelegate.getDefaultNightMode()
@@ -38,8 +45,9 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        // 2. Ánh xạ View và khởi tạo DBHelper
-        dbHelper = DBHelper(this)
+        // Kết nối đến kho dữ liệu bài hát trên Firebase
+        database = FirebaseDatabase.getInstance().getReference("Songs")
+
         recyclerView = findViewById(R.id.recyclerViewSongs)
         val edtSearch = findViewById<EditText>(R.id.edtSearch)
 
@@ -53,21 +61,14 @@ class MainActivity : AppCompatActivity() {
 
         edtSearch.background.alpha = 255
 
-        // 3. Chèn dữ liệu mẫu nếu DB trống
-        if (dbHelper.getAllSongs().isEmpty()) {
-            dbHelper.addSong("Đom Đóm", "Jack - J97", "nhac_1", "nen", "Em đi mất rồi, còn anh ở lại...")
-            dbHelper.addSong("Hồng Nhan", "Jack x K-ICM", "nhac_2", "nen1", "Nhân duyên đứt đoạn, để lại lỡ làng...")
-            dbHelper.addSong("Sóng Gió", "Jack x K-ICM", "nhac_3", "nen2", "Hồng trần trên đôi cánh tay...")
-        }
-
-        // 4. THIẾT LẬP RECYCLERVIEW VÀ KHỞI TẠO ADAPTER NGAY TẠI ĐÂY (TRỊ LỖI VĂNG APP)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.setHasFixedSize(true)
-        songList = dbHelper.getAllSongs()
         songAdapter = SongAdapter(songList)
         recyclerView.adapter = songAdapter
 
-        // 5. LOGIC THANH TÌM KIẾM
+        // Tự động tải danh sách nhạc từ Firebase
+        fetchSongsFromFirebase()
+
         edtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -76,7 +77,6 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // CÀI ĐẶT HIỆU ỨNG NHÚN KHI CHẠM CHO CÁC NÚT
         setupButtonAnimations(navHome)
         setupButtonAnimations(navDownload)
         setupButtonAnimations(navAdminTop)
@@ -84,13 +84,10 @@ class MainActivity : AppCompatActivity() {
         setupButtonAnimations(navPlay)
         setupButtonAnimations(navLogout)
 
-        // SỰ KIỆN CLICK "XEM TẤT CẢ"
         tvSeeAll.setOnClickListener {
-            val intent = Intent(this, ActivityTopHits::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ActivityTopHits::class.java))
         }
 
-        // SỰ KIỆN CLICK MENU
         navHome.setOnClickListener {
             Toast.makeText(this, "Đang ở Trang chủ", Toast.LENGTH_SHORT).show()
         }
@@ -137,14 +134,10 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // --- SỰ KIỆN CLICK NÚT CÀI ĐẶT ---
         navSettingsTop.setOnClickListener {
             val switchView = androidx.appcompat.widget.SwitchCompat(this)
             switchView.text = " Giao diện tối (Dark Mode)"
             switchView.textSize = 16f
-
-            // Ngắt sự kiện ảo lúc khởi tạo
-            switchView.setOnCheckedChangeListener(null)
             switchView.isChecked = sharedPref.getBoolean("isDarkMode", false)
             switchView.setPadding(60, 60, 60, 60)
 
@@ -157,21 +150,40 @@ class MainActivity : AppCompatActivity() {
             dialog.show()
 
             switchView.setOnCheckedChangeListener { buttonView, isChecked ->
-                // Chỉ chạy khi ngón tay người dùng thực sự chạm vào nút gạt
                 if (buttonView.isPressed) {
                     sharedPref.edit().putBoolean("isDarkMode", isChecked).apply()
-                    dialog.dismiss() // Đóng thông báo trước khi đổi màu
+                    dialog.dismiss()
 
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         val newMode = if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
                         AppCompatDelegate.setDefaultNightMode(newMode)
-                    }, 200) // Nghỉ 0.2 giây đợi tắt hẳn Dialog
+                    }, 200)
                 }
             }
         }
     }
 
-    // HÀM TẠO HIỆU ỨNG CO GIÃN
+    private fun fetchSongsFromFirebase() {
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                songList.clear()
+                fullSongList.clear()
+                for (songSnapshot in snapshot.children) {
+                    val song = songSnapshot.getValue(Song::class.java)
+                    if (song != null) {
+                        songList.add(song)
+                        fullSongList.add(song)
+                    }
+                }
+                songAdapter.updateList(songList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@MainActivity, "Lỗi tải dữ liệu mạng", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
     private fun setupButtonAnimations(view: View) {
         view.setOnTouchListener { v, event ->
             when (event.action) {
@@ -186,20 +198,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Cập nhật lại list nhạc khi quay về từ trang khác
-        songList = dbHelper.getAllSongs()
-        if (::songAdapter.isInitialized) {
-            songAdapter.updateList(songList)
-        }
-    }
-
     private fun filterSongs(text: String) {
-        if (!::songAdapter.isInitialized) return // Chốt chặn an toàn tuyệt đối cuối cùng
+        if (!::songAdapter.isInitialized) return
 
         val filteredList = ArrayList<Song>()
-        for (song in songList) {
+        for (song in fullSongList) {
             if (song.title.lowercase().contains(text.lowercase()) ||
                 song.artist.lowercase().contains(text.lowercase())) {
                 filteredList.add(song)
